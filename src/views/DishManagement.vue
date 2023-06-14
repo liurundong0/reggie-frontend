@@ -119,3 +119,147 @@
   </div>
 </template>
 
+<script>
+import {getDishPage, deleteDish, dishStatusByStatus} from "@/api/dish"
+
+export default {
+  name: "DishManagement.vue",
+  data() {
+    return {
+      input: '',
+      counts: 0,
+      page: 1,
+      pageSize: 10,
+      tableData: [],
+      dishState: '',
+      checkList: [],
+      apiUrl: this.$apiBaseUrl
+    }
+  },
+  computed: {},
+  created() {
+    this.init()
+  },
+  mounted() {
+  },
+  methods: {
+    async init() {
+      const params = {
+        page: this.page,
+        pageSize: this.pageSize,
+        name: this.input ? this.input : undefined
+      }
+      await getDishPage(params).then(res => {
+        if (String(res.code) === '1') {
+          this.tableData = res.data.records || []
+          this.counts = res.data.total
+        }
+      }).catch(err => {
+        this.$message.error('请求出错了：' + err)
+      })
+    },
+    getImage(image) {
+      return `${this.apiUrl}/common/download?name=${image}`
+    },
+    handleQuery() {
+      this.page = 1;
+      this.init();
+    },
+    // 添加
+    addFoodtype(st) {
+      if (st === 'add') {
+        window.parent.handleSelect({
+          index: '2',
+          route: '/dashboard/add-dish',
+          title: '添加菜品'
+        }, true)
+      } else {
+        window.parent.handleSelect({
+          index: '2',
+          route: '/dashboard/add-dish',
+          name: '修改菜品',
+          id: st
+        }, true)
+      }
+    },
+
+    // 删除
+    deleteHandle(type, id) {
+      if (type === '批量' && id === null) {
+        if (this.checkList.length === 0) {
+          return this.$message.error('请选择删除对象')
+        }
+      }
+      this.$confirm('确认删除该菜品, 是否继续?', '确定删除', {
+        'confirmButtonText': '确定',
+        'cancelButtonText': '取消',
+      }).then(() => {
+        deleteDish(type === '批量' ? this.checkList.join(',') : id).then(res => {
+          if (res.code === 1) {
+            this.$message.success('删除成功！')
+            this.handleQuery()
+          } else {
+            this.$message.error(res.msg || '操作失败')
+          }
+        }).catch(err => {
+          this.$message.error('请求出错了：' + err)
+        })
+      })
+    },
+
+    //状态更改
+    statusHandle(row) {
+      let params = {}
+      if (typeof row === 'string') {
+        if (this.checkList.length === 0) {
+          this.$message.error('批量操作，请先勾选操作菜品！')
+          return false
+        }
+        params.id = this.checkList.join(',')
+        params.status = row
+      } else {
+        params.id = row.id
+        params.status = row.status ? '0' : '1'
+      }
+      this.dishState = params
+      this.$confirm('确认更改该菜品状态?', '提示', {
+        'confirmButtonText': '确定',
+        'cancelButtonText': '取消',
+        'type': 'warning'
+      }).then(() => {
+        // 起售停售---批量起售停售接口
+        dishStatusByStatus(this.dishState).then(res => {
+          if (res.code === 1) {
+            this.$message.success('菜品状态已经更改成功！')
+            this.handleQuery()
+          } else {
+            this.$message.error(res.msg || '操作失败')
+          }
+        }).catch(err => {
+          this.$message.error('请求出错了：' + err)
+        })
+      })
+    },
+
+    // 全部操作
+    handleSelectionChange(val) {
+      let checkArr = []
+      val.forEach((n) => {
+        checkArr.push(n.id)
+      })
+      this.checkList = checkArr
+    },
+    handleSizeChange(val) {
+      this.pageSize = val
+      this.init()
+    },
+    handleCurrentChange(val) {
+      this.page = val
+      this.init()
+    }
+  }
+}
+</script>
+
+<style scoped>
+</style>
