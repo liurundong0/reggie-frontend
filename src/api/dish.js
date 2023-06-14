@@ -51,3 +51,46 @@ const getCategoryList = (params) => {
         params
     })
 }
+
+// 查菜品列表的接口
+const queryDishList = (params) => {
+    return caxios({
+        url: '/dish/list',
+        method: 'get',
+        params
+    })
+}
+
+// 文件down预览
+const commonDownload = (params) => {
+    return caxios({
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+        url: '/common/download',
+        method: 'get',
+        params
+    })
+}
+
+// 起售停售---批量起售停售接口
+const dishStatusByStatus = (params) => {
+    return caxios({
+        url: `/dish/status/${params.status}`,
+        method: 'post',
+        params: {ids: params.id}
+    })
+}
+
+export {
+    getDishPage,
+    deleteDish,
+    editDish,
+    addDish,
+    queryDishById,
+    getCategoryList,
+    queryDishList,
+    commonDownload,
+    dishStatusByStatus
+}
+
