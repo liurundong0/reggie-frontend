@@ -20,7 +20,7 @@ function enableOrDisableEmployee (params) {
 // 新增---添加员工
 function addEmployee (params) {
     return caxios({
-        url: '/employee',
+        url: '/employee/save',
         method: 'post',
         data: { ...params }
     })
